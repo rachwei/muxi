@@ -23,7 +23,7 @@ app.use('/', router)
 const dbOptions = {useNewUrlParser:true, useUnifiedTopology: true}
 mongoose.connect(process.env.DB_URI, dbOptions)
 .then(() => console.log("DB Connected!"))
-.catch(err => console.log(err));
+.catch(err => console.log("There was an error " + err));
 
 const port = process.env.PORT || 4000
 const server = app.listen(port, () => {

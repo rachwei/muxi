@@ -1,0 +1,10 @@
+{
+    "reviews": [
+        {"_id":{"$oid":"64dfd3ea7ea3463653dfab98"},"user_id":"64dfa422c3fb6f8b0e7a2199","message":"friend 1 review 2","song_id":"1xQ6trAsedVPCdbtDAmk0c","rating":{"$numberInt":"0"},"likes":["64ded43ffb919298558883f3"],"comments":[],"entryDate":{"$date":{"$numberLong":"1692390378572"}},"__v":{"$numberInt":"0"}},
+        {"_id":{"$oid":"64dfa25efa0790ace743a0cd"},"user_id":"64dfa422c3fb6f8b0e7a2199","message":"friend 1 review 1","song_id":"2SAqBLGA283SUiwJ3xOUVI","rating":{"$numberInt":"10"},"likes":["64ded43ffb919298558883f3"],"comments":[],"entryDate":{"$date":{"$numberLong":"1692377694168"}},"__v":{"$numberInt":"0"}}
+    ],
+    "users": [
+        "64dfa422c3fb6f8b0e7a2199",
+        "64ded43ffb919298558883f3"
+    ]
+}

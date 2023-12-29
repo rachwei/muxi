@@ -1,0 +1,23 @@
+.container {
+    display: flex;
+
+}
+  
+.navbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh; /* Full height of the viewport */
+    background-color: white;
+    color: #fff;
+    padding: 20px;
+    z-index: 1000; /* Ensure a higher z-index to keep it above other elements */
+}
+  
+.content {
+    flex: 1;
+    padding: 20px;
+    margin-left: 200px;
+    overflow-y: auto;
+    justify-content: center; /* Center content horizontally */
+}
