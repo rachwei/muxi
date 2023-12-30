@@ -1,5 +1,6 @@
-from flask import Flask, request, jsonify
-from quart import Quart, render_template, websocket
+
+from quart import Quart, render_template, websocket, current_app, request, jsonify
+import sys
 
 import asyncio
 import threading
@@ -8,13 +9,17 @@ from helpers.rec_engine import train_async, get_recs
 
 app = Quart(__name__)
 
-train_lock = threading.Lock()
-
 @app.route('/train', methods=['post'])
 async def train():
-    users = request.args.get('users')
-    reviews = request.args.get('reviews')
-    await train_async(users, reviews)
+    data = await request.get_json()
+    print(data)
+    users = data.get('users')
+    reviews = data.get('reviews')
+    print(users)
+    print(reviews)
+    print('This is standard output', file=sys.stdout)
+    asyncio.create_task(train_async(users, reviews))
+
     return "Training started!"
 
 @app.route('/recommend', methods=['get'])
@@ -24,7 +29,7 @@ def recommend():
         return jsonify({'message': 'User id is None'})
     
     recs = get_recs(user_id)
-    return jsonify({"recs": recs})
+    return jsonify(recs)
 
 
 if __name__ == '__main__':

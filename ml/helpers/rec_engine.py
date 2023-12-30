@@ -1,12 +1,13 @@
 import asyncio
 import numpy as np
+import os
 import json
 
 train_semaphore = asyncio.Semaphore(value=1)
-user_mapping_url = "../data/user_mapping.json"
-unique_songs_url = "../data/unique_songs.json"
-matrix_url = "../data/matrix.csv"
-similarity_matrix_url = "../data/similarity_matrix.csv"
+user_mapping_url = os.path.join(os.getcwd(), "data/user_mapping.json")
+unique_songs_url = os.path.join(os.getcwd(), "data/unique_songs.json")
+matrix_url = os.path.join(os.getcwd(), "data/matrix.csv")
+similarity_matrix_url = os.path.join(os.getcwd(), "data/similarity_matrix.csv")
 
 def select_cols(df):
     return df[["name", "artist", "spotify_id", "danceability", "energy", "loudness", "speechiness", "acousticness", 
@@ -34,27 +35,30 @@ async def cosine_similarity(matrix):
 
 async def train_async(users, reviews):
     async with train_semaphore:
-        user_mapping = {user: index for index, user in enumerate(users)}
+        print("hello!")
+        user_mapping = {user['_id']: index for index, user in enumerate(users)}
         unique_songs = list(set(entry['song_id'] for entry in reviews))
         song_mapping = {song: index for index, song in enumerate(unique_songs)}
+        print(user_mapping)
+        print(song_mapping)
 
         matrix = np.zeros((len(users), len(unique_songs)))
 
         for review in reviews:
-            matrix[user_mapping[review['user_id']]][song_mapping[review['song_id']]] = review['rating']['$numberInt']
+            matrix[user_mapping[review['user_id']]][song_mapping[review['song_id']]] = review['rating']
         
         similarity_matrix = await cosine_similarity(matrix)
         # save everything
-        with open(user_mapping_url, 'w') as json_file:
+        with open(user_mapping_url, 'w+') as json_file:
             json.dump(user_mapping, json_file)
-        with open(unique_songs_url, 'w') as json_file:
+        with open(unique_songs_url, 'w+') as json_file:
             json.dump(unique_songs, json_file)
         np.savetxt(matrix_url, matrix, delimiter=',')
         np.savetxt(similarity_matrix_url, similarity_matrix, delimiter=',')
-        print("Done!")
         
 
 def get_recs(user_id, k = 10):
+    print("getting recs for " + user_id)
     matrix = np.loadtxt(matrix_url, delimiter=',')
     similarity_matrix = np.loadtxt(similarity_matrix_url, delimiter=',')
 
@@ -63,6 +67,9 @@ def get_recs(user_id, k = 10):
     with open(unique_songs_url, 'r') as json_file:
         unique_songs = json.load(json_file)
 
+    print("in the getting recs:")
+    print(user_mapping)
+    print(unique_songs)
     if user_id not in user_mapping:
         return []
 
@@ -73,8 +80,8 @@ def get_recs(user_id, k = 10):
     unrated_items = np.where(user_ratings == 0)[0] # exclude rated items
     sorted_items = sorted(unrated_items, key=lambda x: weighted_ratings[x], reverse=True) # sort
     indices = sorted_items[:k]
-    
     recs = [unique_songs[index] for index in indices]
+    print(recs)
     return recs
 
 if __name__ == "main":

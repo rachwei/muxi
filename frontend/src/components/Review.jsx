@@ -3,6 +3,7 @@ import axios from 'axios';
 
 function Review(props) {
     const review = props.review
+    const [comment, setComment] = useState('');
 
     const handleLike = (e) => {
         e.preventDefault();
@@ -23,6 +24,25 @@ function Review(props) {
         }
         axiosLikePost()
     }
+
+    const handleComment = async (e) => {
+        e.preventDefault();
+
+        try {
+            const response = await axios.post('http://localhost:4000/commentOnReview', {
+                params: {
+                    user_id: props.user_id,
+                    review_id: review._id,
+                    comment: comment
+                }
+            });
+            console.log("Commented on review:", response.data);
+            setComment('')
+            // update ui in the future to reflect??
+        } catch (error) {
+            console.log("Error submitting a comment", error);
+        }
+    };
     
     return (
         <div className="review-card">
@@ -33,7 +53,17 @@ function Review(props) {
             <p>Comment count: {review.comments.length}</p>
             <p>Entry date: {review.entryDate}</p>
             <button onClick={handleLike}>Like</button>
-            <button>Comment</button>
+            <form onSubmit={handleComment}>
+                <label>
+                    Comment:
+                    <input
+                        type="text"
+                        value={comment}
+                        onChange={(e) => setComment(e.target.value)}
+                    />
+                </label>
+                <button type="submit">Comment</button>
+            </form>
         </div>
     );
 }

@@ -22,6 +22,7 @@ function Navbar() {
             <Menu>
                 <MenuItem component={<Link to="/" />}> Home </MenuItem>
                 <MenuItem component={<Link to="/notifications" />}> Notifications </MenuItem>
+                <MenuItem component={<Link to="/discover" />}>Discover</MenuItem>
                 <MenuItem component={<Link to="/messages" />}> Messages </MenuItem>
                 <MenuItem component={<Link to="/profile" />}> Profile </MenuItem>
                 <MenuItem component={<Link to="/signout" />}> Sign out </MenuItem>

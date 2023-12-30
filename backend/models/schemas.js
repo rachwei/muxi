@@ -49,11 +49,27 @@ const friendRequestSchema = new Schema({
 }, {timestamps: true}
 )
 
+const convoSchema = new Schema({
+    p1: {type: String, required: true},
+    p2: {type: String, required: true},
+    num_messages: {type: Number}
+}, {timestamps: true})
+
+const messageSchema = new Schema({
+    sender_id: {type: String, required: true},
+    receiver_id: {type: String, required: true},
+    content: {type: String, required: true},
+    convo_id: {type: String, required: true}
+}, {timestamps: true})
+
 const Users = mongoose.model('Users', userSchema, 'users')
 const Reviews = mongoose.model('Reviews', reviewSchemas, 'reviews')
 const Songs = mongoose.model('Songs', songSchema, 'Music')
 const FriendRequests = mongoose.model('FriendRequests', friendRequestSchema, 'friend_request')
+const Convos = mongoose.model('Convos', convoSchema, 'convos')
+const Messages = mongoose.model('Messages', messageSchema, 'messages')
 
-const mySchemas = {"Users": Users, "Reviews": Reviews, "Songs": Songs, "FriendRequests": FriendRequests}
+const mySchemas = {"Users": Users, "Reviews": Reviews, "Songs": Songs, 
+                "FriendRequests": FriendRequests, "Convos": Convos, "Messages": Messages}
 
 module.exports = mySchemas

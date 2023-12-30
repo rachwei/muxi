@@ -1,6 +1,29 @@
 const express = require('express')
+const axios = require('axios')
 const router = express.Router()
 const schemas = require('../models/schemas')
+
+var cron = require('node-cron');
+
+const trainRecModel = async() => {
+    const users = await schemas.Users.find().lean().select('_id');
+    const reviews = await schemas.Reviews.find().lean();
+
+    try {
+        const args = {
+          users: users,
+          reviews: reviews,
+        };
+    
+        await axios.post('http://127.0.0.1:5000/train', args);
+        console.log('Triggered train endpoint')
+    } catch (error) {
+        console.error('Error triggering Flask endpoint train:', error.message);
+    }
+};
+
+cron.schedule('* * * * *', trainRecModel);
+
 
 router.post('/users', async(req, res) => {
     const {name, spotify_id, images} = req.body.params
@@ -237,6 +260,44 @@ router.get('/get-reviews', async(req, res) => {
 })
 
 
+router.post('/trainRecModel', async(req, res) => {
+    const users = await schemas.Users.find().lean().select('_id');
+    const reviews = await schemas.Reviews.find().lean();
+    console.log(users)
+    console.log(reviews)
+
+    try {
+        const arguments = {
+          users: users,
+          reviews: reviews,
+        };
+    
+        await axios.post('http://127.0.0.1:5000/train', arguments);
+        res.send('Triggered train endpoint')
+    } catch (error) {
+        console.error('Error triggering Flask endpoint train:', error.message);
+        res.status(500).send('Internal Server Error');
+    }
+})
+
+router.get('/getRecommendations', async(req, res) => {
+
+    try {
+        const user_id = req.query.user_id
+        const arguments = {
+          user_id: user_id
+        };
+        console.log("in the get recommendations function!")
+        const recs = await axios.get('http://127.0.0.1:5000/recommend', { params: arguments });
+        console.log("got back", recs.data)
+        res.send(recs.data)
+    } catch (error) {
+        console.error('Error triggering Flask endpoint train:', error.message);
+        res.status(500).send('Internal Server Error');
+    }
+})
+
+
 router.get('/get-all-reviews', async(req, res) => {
     const {user_id} = req.query
     const friends_query = await schemas.Users.findOne({ _id: user_id }).lean()
@@ -256,6 +317,20 @@ router.post('/like-review', async(req, res) => {
 
     if (review) {
         res.send(review_id)
+    } else {
+        res.send("Failure when liking this post", review_id)
+    }
+})
+
+router.post('/commentOnReview', async(req, res) => {
+    const {user_id, review_id, comment} = req.body.params
+    const review = await schemas.Reviews.updateOne(
+        {"_id": review_id},
+        {"$push": {"comments": {user_id, comment}}}
+    )
+
+    if (review) {
+        res.sendStatus(200)
     } else {
         res.send("Failure when liking this post", review_id)
     }
@@ -288,5 +363,119 @@ router.post('/post-review', async(req, res) => {
         }
     }
 })
+
+
+
+router.get('/getConvos', async(req, res) => {
+    const user_id = req.query.user_id
+    const convos = await schemas.Convos.find({ $or: [{p1: user_id},{p2: user_id}]}).lean();
+
+    if (convos) {
+        res.send(convos)
+    } else {
+        res.send([])
+    }
+})
+
+
+router.get('/getNewMessages', async(req, res) => {
+    const {convo_id, last_message_id} = req.query
+    const convo = await schemas.Convos.findOne({_id: convo_id}).select("_id createdAt").lean();
+    
+    let lastMessage = convo.createdAt
+    if (last_message_id) {
+        const latest = await schemas.Messages.findOne({_id: last_message_id}).select("createdAt").lean()
+        if (latest) {
+            lastMessage = latest.createdAt 
+        }
+    }
+
+    const messages = await schemas.Messages.find({
+        $and: [
+          { convo_id: convo_id },
+          { createdAt: { $gt: lastMessage } }
+        ]
+      }).sort({ createdAt: 1 }).lean();
+
+    if (messages && messages.length) {
+        res.send({"messages": messages, "latest": messages[messages.length - 1]._id})
+    } else res.send({"messages": [], "latest": last_message_id})
+})
+
+
+
+
+router.post('/sendMessage', async(req, res) => {
+    const {sender_id, convo_id, content} = req.body.params
+    console.log(sender_id + " " + convo_id + " " + content)
+    if (!content) res.sendStatus(500)
+    let convo
+
+    try {
+        convo = await schemas.Convos.findOneAndUpdate({_id: convo_id}, {
+            $inc: { num_messages: 1 }
+        }, {new: true}).lean();
+    } catch(error) {
+        res.sendStatus(500)
+        return
+    }
+
+    const receiver_id = convo.p1 == sender_id ? convo.p2 : convo.p1
+
+    const newMessageData = {
+        sender_id: sender_id,
+        receiver_id: receiver_id,
+        content: content,
+        convo_id: convo_id
+    }
+
+    const newMessage = new schemas.Messages(newMessageData)
+    const saveMessage = await newMessage.save()
+
+    if (saveMessage) {
+        res.send(saveMessage._id)
+    } else {
+        res.send("Failure when saving a message")
+    }
+})
+
+
+router.post('/createConvo', async(req, res) => {
+    const {sender_id, receiver_id} = req.body.params
+
+    try {
+        const convo = await schemas.Convos.findOne({
+            $or: [
+                { $and: [{ p1: sender_id }, { p2: receiver_id }] },
+                { $and: [{ p2: receiver_id }, { p2: sender_id }] }
+            ]
+        }).select('_id').lean();
+        console.log("convo id", convo)
+
+        if (convo) {
+            res.send(convo._id)
+            return
+        }
+
+        const newConvoData = {p1: sender_id, p2: receiver_id, num_messages: 0}
+        const newConvo = new schemas.Convos(newConvoData)
+        const saveConvo = await newConvo.save()
+    
+        if (saveConvo) {
+            console.log("Created convo with id: ", saveConvo._id)
+            res.send(saveConvo._id)
+            return
+        } else {
+            res.send("Failure when saving a message")
+            return
+        }
+
+    } catch(error) {
+        res.sendStatus(500)
+        return
+    }
+})
+
+
 
 module.exports = router
