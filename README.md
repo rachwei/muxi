@@ -1,4 +1,4 @@
-<h1 align="center">Welcome to Muxi 👋</h1>
+<h1 align="center">Welcome to Muxi 🎶</h1>
 <p>
   <a href="documentation here" target="_blank">
     <img alt="Documentation" src="https://img.shields.io/badge/documentation-yes-brightgreen.svg" />
