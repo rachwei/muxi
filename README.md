@@ -15,7 +15,7 @@
 ## Install
 
 ```sh
-install command
+npm install
 ```
 
 ## Usage
