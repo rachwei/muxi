@@ -5,7 +5,8 @@
   </a>
 </p>
 
-> Muxi description
+> -- In the process of prettifying --
+> Muxi is a platform that allows you to rate/review songs and follow others' thoughts! Discover your new favorite songs and build friendships.
 
 ### 🏠 [Homepage](homepage here)
 
@@ -18,15 +19,13 @@ install command
 ```
 
 ## Usage
-
+Backend and Frontend:
 ```sh
-usage instruction
+npm start
 ```
-
-## Run tests
-
+Flask startup:
 ```sh
-test command
+python3 wsgi.py
 ```
 
 ## Author
@@ -36,10 +35,6 @@ test command
 * Website: https://rachwei.github.io/#/
 * Github: [@rachwei](https://github.com/rachwei)
 * LinkedIn: [@https:\/\/www.linkedin.com\/in\/rachaelwei\/](https://linkedin.com/in/https:\/\/www.linkedin.com\/in\/rachaelwei\/)
-
-## Show your support
-
-Give a ⭐️ if this project helped you!
 
 ***
 _This README was generated with ❤️ by [readme-md-generator](https://github.com/kefranabg/readme-md-generator)_
